@@ -1,12 +1,6 @@
-[package]
-name = "monkey-scheme"
-version = "0.0.1"
-edition = "2021"
-authors = ["Vincenzo Palazzo <vincenzopalazzodev@gmail.com>"]
-description = "This is a rust transpiler that converts a JSON scheme to a source code like Go, C++, or also GraphQL or protocol buffer."
-readme = "README.md"
-homepage = "https://github.com/vincenzopalazzo/monkey-scheme"
-repository = "https://github.com/vincenzopalazzo/monkey-schemei"
-license-file = "LICENSE"
+[workspace]
 
-[dependencies]
+members = [
+        "yaml-tree",
+        "monkyd"
+]
