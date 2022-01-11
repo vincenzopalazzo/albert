@@ -1,6 +1,4 @@
 /// TODO: adding the doc on this module
-use yaml_rust::yaml::Array;
-
 use super::{VisitErr, YamlVisitor};
 use crate::core::source_code::SourceCodeIRNode;
 
@@ -11,7 +9,7 @@ pub struct VisitSrc {
 }
 
 impl YamlVisitor<SourceCodeIRNode> for VisitSrc {
-    fn visit_array(arr: &Array) -> Result<(), VisitErr> {
+    fn visit_array() -> Result<(), VisitErr> {
         Ok(())
     }
 

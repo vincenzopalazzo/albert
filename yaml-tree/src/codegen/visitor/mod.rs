@@ -1,13 +1,12 @@
 /// Visitor that implement a visit over YAML node
 use thiserror::Error;
-use yaml_rust::yaml::Array;
 
 pub mod source_code;
 
 /// Visitor Trait that provide the interface
 /// to visit a YAML node
 pub trait YamlVisitor<T> {
-    fn visit_array(arr: &Array) -> Result<(), VisitErr>;
+    fn visit_array() -> Result<(), VisitErr>;
     /// Return the value inflate by the visitor
     fn result() -> T;
 }
