@@ -2,5 +2,5 @@
 
 members = [
         "yaml-tree",
-        "monkyd"
+        "monkyc"
 ]
