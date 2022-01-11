@@ -15,7 +15,7 @@ impl Scanner {
 
 /// YamlScanner implementation for the Scanner struct
 impl YamlScanner<YamlToken> for Scanner {
-    fn scan(&self, content: &str) -> &Vec<YamlToken> {
+    fn scan(&mut self, content: &str) -> &Vec<YamlToken> {
         self.run(content);
         &self.tokens
     }
