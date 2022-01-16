@@ -3,7 +3,7 @@
 /// author: https://github.com/vincenzopalazzo
 use std::vec::Vec;
 
-use crate::scanner;
+use crate::scanner::tokens;
 
 pub mod parser;
 
@@ -13,5 +13,5 @@ pub struct YamlNode {}
 
 /// Interface Yaml Interface
 trait YamlParser<T> {
-    fn parse(&mut self, tokens: &Vec<scanner::YamlToken>) -> &Vec<T>;
+    fn parse(&mut self, tokens: &Vec<tokens::YamlToken>) -> &Vec<T>;
 }

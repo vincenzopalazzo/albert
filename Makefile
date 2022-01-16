@@ -21,4 +21,4 @@ build:
 	$(CC) build --release
 
 check:
-	@echo "Nothings yet"
+	$(CC) test --all -- --show-output

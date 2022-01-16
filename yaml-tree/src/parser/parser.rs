@@ -5,7 +5,7 @@
 use std::vec::Vec;
 
 use super::{YamlNode, YamlParser};
-use crate::scanner;
+use crate::scanner::tokens;
 
 struct Parser {
     pub ir: Vec<YamlNode>,
@@ -13,12 +13,12 @@ struct Parser {
 
 /// Core implementation of the Yaml Parser.
 impl Parser {
-    fn walk(&mut self, tokens: &Vec<scanner::YamlToken>) {}
+    fn walk(&mut self, tokens: &Vec<tokens::YamlToken>) {}
 }
 
 /// Common implementation of the Yaml Parser
 impl YamlParser<YamlNode> for Parser {
-    fn parse(&mut self, tokens: &Vec<scanner::YamlToken>) -> &Vec<YamlNode> {
+    fn parse(&mut self, tokens: &Vec<tokens::YamlToken>) -> &Vec<YamlNode> {
         self.walk(tokens);
         &self.ir
     }

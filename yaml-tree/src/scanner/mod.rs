@@ -4,13 +4,13 @@
 use std::vec::Vec;
 
 pub mod scanner;
+pub mod tokens;
 
-/// YAML token definition during the parsing
-/// of the YAML file
-pub enum YamlToken {
-    EOF,
-}
-
+/// Yaml Scanner interface
 trait YamlScanner<T> {
+    /// Create a new instance of the Yaml Scanner
+    fn new() -> Self;
+
+    /// Run the scan of the yaml content provided as str
     fn scan(&mut self, content: &str) -> &Vec<T>;
 }
