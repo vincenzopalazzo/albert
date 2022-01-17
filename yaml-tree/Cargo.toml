@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-yaml-rust = "0.4"
 thiserror = "1.0"
+monkey-common = { path = "../common" }
 
 [dev-dependencies]
 indoc = "1.0"
