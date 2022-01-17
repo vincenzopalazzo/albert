@@ -1,0 +1,8 @@
+[package]
+name = "monkey-codegen"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+monkey-common = { path = "../common" }
+monkey-yaml = {  path = "../yaml" }

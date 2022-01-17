@@ -12,8 +12,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "monkey-codegen"
+version = "0.1.0"
+dependencies = [
+ "monkey-common",
+ "monkey-yaml",
+]
+
+[[package]]
 name = "monkey-common"
 version = "0.1.0"
+
+[[package]]
+name = "monkey-yaml"
+version = "0.1.0"
+dependencies = [
+ "indoc",
+ "monkey-common",
+ "thiserror",
+]
 
 [[package]]
 name = "monkyc"
@@ -79,12 +96,3 @@ name = "unindent"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f14ee04d9415b52b3aeab06258a3f07093182b88ba0f9b8d203f211a7a7d41c7"
-
-[[package]]
-name = "yaml-tree"
-version = "0.1.0"
-dependencies = [
- "indoc",
- "monkey-common",
- "thiserror",
-]

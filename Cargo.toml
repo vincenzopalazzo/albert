@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-        "yaml-tree",
+        "yaml",
         "common",
+        "codegen",
         "monkyc",
 ]
