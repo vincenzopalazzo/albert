@@ -1,0 +1,16 @@
+# First example of model definition in YAML format
+ModelOne:
+  - PropOne:
+      - doc_comment: "Documentation document"
+      - type: "int64"
+      - visibility: "public"
+      - mutable: true
+      - nullable: true
+      - reference: false
+  - PropTwo:
+      - doc_comment: "This is a prop that contains a custom type"
+      - type: "ModelOne"
+      - visibility: "public"
+      - mutable: true
+      - nullable: true
+      - reference: true

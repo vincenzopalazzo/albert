@@ -3,16 +3,13 @@
 //! author: https://github.com/vincenzopalazzo
 
 /// Enumerator to define the Yaml language
+#[derive(Debug)]
 pub enum YamlToken {
-    /// Yaml Key, element to the left of :
-    Key(String),
-    /// Yaml Value definition, element to the right of :
-    StringVal(String),
+    Identifier(String),
     NullVal,
     IntVal(i64),
     FloatVal(f64),
-    BoolVal(bool),
-    TimestampVal(String),
+    StringVal(String),
     /// ---, Star document token
     StartDoc,
     /// ..., End document token
@@ -33,14 +30,8 @@ pub enum YamlToken {
     RightCurlyBrace,
     LeftSquareBrace,
     RightSquareBrace,
-    /// > Multiline symbols
-    GraterThan,
-    /// | Pipe symbols
-    Pipe,
-    /// ', Single Quotes to manage a string
-    SingleQuote,
-    /// ", Double Quotes to manage a string
-    DoubleQuote,
+    /// Multiline Token include the | and > token
+    Multiline(String),
     /// EOF put the end of the tokens
     EOF,
 }
