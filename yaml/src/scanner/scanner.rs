@@ -1,7 +1,7 @@
-use super::tokens::*;
 /// Core implementation of the YAML scanner
 ///
 /// author: https://github.com/vincenzopalazzo
+use super::tokens::*;
 use super::YamlScanner;
 
 /// Core implementation of the scanner
@@ -9,6 +9,7 @@ struct Scanner {
     pos: usize,
     line: u64,
     tokens: Vec<YamlToken>,
+    identifier_symbols: Vec<char>,
 }
 
 impl Scanner {
@@ -102,6 +103,9 @@ impl Scanner {
 
     /// Parsing a string contained inside a ' or ".
     fn parse_string(&mut self, stream: &str) {
+        if self.is_at_end(stream) {
+            return;
+        }
         let start = self.pos;
         let mut start_char = self.peek(stream);
         while self.is_valid_for_str(start_char) && !self.is_at_end(stream) {
@@ -115,6 +119,8 @@ impl Scanner {
         self.add_token(YamlToken::StringVal(identifier.to_string()));
     }
 
+    /// Decode a in the correct Yaml Token a correct number, in the correct
+    /// form
     fn parse_number<'a>(&'a mut self, char_at: char, stream: &'a str) -> bool {
         if char_at.is_numeric() {
             let mut is_decimal = false;
@@ -144,11 +150,20 @@ impl Scanner {
         false
     }
 
+    /// Check if a char contains a valid token for the an identifier
+    fn valid_identifier_symbol(&self, char_at: char) -> bool {
+        char_at.is_alphanumeric() || self.identifier_symbols.contains(&char_at)
+    }
+
+    /// Decode in a YamlToken an valid identifier
     fn parse_identifier<'a>(&'a mut self, char_at: char, stream: &'a str) -> bool {
-        if char_at.is_alphabetic() {
+        if self.is_at_end(stream) {
+            return true;
+        }
+        if self.valid_identifier_symbol(char_at) {
             let start = self.pos - 1;
             let mut start_char = self.peek(stream);
-            while start_char.is_alphanumeric() && !self.is_at_end(stream) {
+            while self.valid_identifier_symbol(start_char) && !self.is_at_end(stream) {
                 start_char = self.next(stream);
             }
             // restore the token that the while has consumed
@@ -165,6 +180,7 @@ impl Scanner {
         self.tokens.push(token);
     }
 
+    /// Peek the value in the current position
     fn peek(&self, stream: &str) -> char {
         stream.chars().nth(self.pos).unwrap()
     }
@@ -206,6 +222,7 @@ impl YamlScanner<YamlToken> for Scanner {
             pos: 0,
             line: 0,
             tokens: vec![],
+            identifier_symbols: vec!['_'],
         }
     }
 
@@ -237,5 +254,29 @@ national:
         let tokens = scanner.scan(&simple_yaml);
         println!("{:?}", tokens);
         assert!(tokens.len() > 0);
+    }
+
+    #[test]
+    fn scan_simple_two() {
+        let mut scanner = Scanner::new();
+        let simple_yaml = indoc! {"# This is a list of document
+ModelOne:
+  - PropOne:
+      - doc_comment: \"Documentation document\"
+      - type: \"int64\"
+      - visibility: \"public\"
+      - mutable: true
+      - nullable: true
+      - reference: false
+  - PropTwo:
+      - doc_comment: \"This is a prop that contains a custom type\"
+      - type: \"ModelOne\"
+      - visibility: \"public\"
+      - mutable: true
+      - nullable: true
+      - reference: true"};
+
+        let tokens = scanner.scan(&simple_yaml);
+        println!("{:?}", tokens)
     }
 }
