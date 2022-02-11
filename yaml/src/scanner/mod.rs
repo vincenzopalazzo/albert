@@ -7,7 +7,7 @@ pub mod scanner;
 pub mod tokens;
 
 /// Yaml Scanner interface
-trait YamlScanner<T> {
+pub trait YamlScanner<T> {
     /// Create a new instance of the Yaml Scanner
     fn new() -> Self;
 

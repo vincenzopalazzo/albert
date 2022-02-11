@@ -5,7 +5,7 @@ use super::tokens::*;
 use super::YamlScanner;
 
 /// Core implementation of the scanner
-struct Scanner {
+pub struct Scanner {
     pos: usize,
     line: u64,
     tokens: Vec<YamlToken>,

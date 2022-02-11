@@ -25,13 +25,58 @@ impl Parser {
     /// Walk through the list of tokens
     fn walk(&mut self, tokens: &Vec<YamlToken>) {
         while !self.is_the_end(tokens) {
-            let yaml_doc = self.parse_document(tokens);
-            self.add_to_ir(yaml_doc);
+            self.parse_document(tokens);
         }
     }
 
-    fn parse_document(&mut self, tokens: &Vec<YamlToken>) -> YamlObject {
-        YamlObject::Comment("TODO: implementing the document parsing".to_string())
+    /// Parse the YAML document
+    fn parse_document(&mut self, tokens: &Vec<YamlToken>) {
+        self.parse_comment(tokens);
+        if self.is_the_biginning() && !self.is_the_end(tokens) {
+            let token = self.next(tokens);
+            match token {
+                YamlToken::StartDoc => match token {
+                    YamlToken::Identifier(name) => {
+                        let mapping = self.parse_mapping(name.clone(), tokens);
+                        self.add_to_ir(mapping);
+                    }
+                    _ => panic!("Document bad formatted, {:?}", self.take(tokens)),
+                },
+                YamlToken::Identifier(name) => {
+                    let mapping = self.parse_mapping(name.clone(), tokens);
+                    self.add_to_ir(mapping);
+                }
+                _ => panic!("Document bad formatted, {:?}", self.take(tokens)),
+            }
+        }
+
+        if !self.is_end_of_doc(tokens) && !self.is_the_end(tokens) {
+            panic!(
+                "The document it is no ended, we have the token in the stream {:?}",
+                self.take(tokens)
+            );
+        }
+    }
+
+    /// Check if the token in current position is a end of document.
+    fn is_end_of_doc(&self, tokens: &Vec<YamlToken>) -> bool {
+        tokens[self.current_pos as usize] == YamlToken::EndDoc
+    }
+
+    /// Parse the document comment and store in a new comment node
+    fn parse_comment(&mut self, tokens: &Vec<YamlToken>) {
+        match self.take(tokens) {
+            YamlToken::Pount(content) => {
+                let comment = YamlObject::Comment(content.to_string());
+                self.add_to_ir(comment);
+                self.consume(tokens);
+            }
+            _ => self.skip(),
+        }
+    }
+
+    fn parse_mapping<'a>(&'a self, identifier: String, tokens: &'a Vec<YamlToken>) -> YamlObject {
+        YamlObject::Comment(String::from("TODO: implementing this"))
     }
 
     /// Add the yaml node to the list of Yaml node
@@ -50,18 +95,32 @@ impl Parser {
 
     /// Take the next element in the stream, and increase the current position
     /// of it.
-    fn next<'a>(&'a mut self, tokens: &'a Vec<YamlToken>) -> &'a YamlToken {
+    fn next<'a>(&'a mut self, tokens: &'a Vec<YamlToken>) -> YamlToken {
         self.current_pos += 1;
-        &tokens[self.current_pos as usize]
+        tokens[(self.current_pos - 1) as usize].clone()
     }
 
     /// Take the element at the current position of the stream.
-    fn take<'a>(&'a self, tokens: &'a Vec<YamlToken>) -> &'a YamlToken {
-        &tokens[self.current_pos as usize]
+    fn take<'a>(&'a self, tokens: &'a Vec<YamlToken>) -> YamlToken {
+        tokens[self.current_pos as usize].clone()
     }
 
     fn is_the_end(&self, tokens: &Vec<YamlToken>) -> bool {
         tokens[self.current_pos as usize] == YamlToken::EOF
+    }
+
+    fn is_the_biginning(&self) -> bool {
+        self.current_pos == 0
+    }
+
+    /// do nothings, just make the code more readble.
+    fn skip(&self) {}
+
+    /// consume the token in current position without store
+    /// the value.
+    /// it is the same of next, but it just make the code more readble
+    fn consume(&mut self, tokens: &Vec<YamlToken>) {
+        self.next(tokens);
     }
 }
 
@@ -70,5 +129,61 @@ impl YamlParser<YamlObject> for Parser {
     fn parse(&mut self, tokens: &Vec<YamlToken>) -> &Vec<YamlObject> {
         self.walk(tokens);
         &self.ir
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::parser::parser::{Parser, YamlParser};
+    use crate::scanner::{scanner::Scanner, YamlScanner};
+
+    use indoc::indoc;
+
+    #[test]
+    fn scan_simple_one() {
+        let mut scanner = Scanner::new();
+        let mut parser = Parser::new();
+        let simple_yaml = indoc! {"# This is a list of document
+---
+american:
+ - \"Boston Red Sox\"
+ - \"Detroit Tigers\"
+ - \"New York Yankees\"
+national:
+ - \"New York Mets\"
+ - \"Chicago Cubs\"
+ - \"Atlanta Braves\"
+"};
+        let tokens = scanner.scan(&simple_yaml);
+        println!("{:?}", tokens);
+
+        let ir = parser.parse(&tokens);
+        assert!(ir.len() > 0);
+    }
+
+    #[test]
+    fn scan_simple_two() {
+        let mut scanner = Scanner::new();
+        let mut parser = Parser::new();
+        let simple_yaml = indoc! {"# This is a list of document
+ModelOne:
+  - PropOne:
+      - doc_comment: \"Documentation document\"
+      - type: \"int64\"
+      - visibility: \"public\"
+      - mutable: true
+      - nullable: true
+      - reference: false
+  - PropTwo:
+      - doc_comment: \"This is a prop that contains a custom type\"
+      - type: \"ModelOne\"
+      - visibility: \"public\"
+      - mutable: true
+      - nullable: true
+      - reference: true"};
+
+        let tokens = scanner.scan(&simple_yaml);
+        let ir = parser.parse(&tokens);
+        assert!(ir.len() > 0);
     }
 }
