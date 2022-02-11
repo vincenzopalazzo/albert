@@ -6,14 +6,14 @@
 //! author: https://github.com/vincenzopalazzo
 use std::{io, vec};
 
-use monkey_yaml::parser::YamlNode;
+use monkey_yaml::parser::tokens::YamlObject;
 
 pub mod golang;
 
 /// Data model enum with all type of Data model
 /// supported by the code gen module.
 pub enum DataModel<'a> {
-    Yaml(&'a vec::Vec<YamlNode>),
+    Yaml(&'a vec::Vec<YamlObject>),
     JsonSchema,
     Json,
 }

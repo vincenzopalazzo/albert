@@ -3,15 +3,12 @@
 /// author: https://github.com/vincenzopalazzo
 use std::vec::Vec;
 
-use crate::scanner::tokens;
+use crate::scanner::tokens::YamlToken;
 
 pub mod parser;
-
-/// Super type of Yaml node
-/// TODO: we can use a enum?
-pub struct YamlNode {}
+pub mod tokens;
 
 /// Interface Yaml Interface
 trait YamlParser<T> {
-    fn parse(&mut self, tokens: &Vec<tokens::YamlToken>) -> &Vec<T>;
+    fn parse(&mut self, tokens: &Vec<YamlToken>) -> &Vec<T>;
 }
