@@ -3,7 +3,7 @@
 //! author: https://github.com/vincenzopalazzo
 
 /// Enumerator to define the Yaml language
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum YamlToken {
     Identifier(String),
     NullVal,
