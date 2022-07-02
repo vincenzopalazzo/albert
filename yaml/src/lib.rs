@@ -1,4 +1,4 @@
-/// TODO: doc the lib
+//! YAML format parser.
 extern crate monkey_common;
 
 pub mod parser;

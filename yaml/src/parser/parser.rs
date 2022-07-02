@@ -1,3 +1,5 @@
+use crate::parser::YamlParserError;
+use std::error::Error;
 /// parser crate to implement the core implementation
 /// of the Yaml parser
 ///
@@ -8,9 +10,12 @@ use super::tokens::{YamlObject, YamlScope};
 use super::YamlParser;
 use crate::scanner::tokens::YamlToken;
 
+#[derive(Debug)]
 pub struct Parser {
     ir: Vec<YamlObject>,
     current_pos: u32,
+    current_scope_size: Option<u32>,
+    indentation_size: u16,
 }
 
 /// Core implementation of the Yaml Parser.
@@ -19,6 +24,8 @@ impl Parser {
         Parser {
             ir: vec![],
             current_pos: 0,
+            current_scope_size: None,
+            indentation_size: 0,
         }
     }
 
@@ -31,22 +38,33 @@ impl Parser {
 
     /// Parse the YAML document
     fn parse_document(&mut self, tokens: &Vec<YamlToken>) {
-        self.parse_comment(tokens);
-        if self.is_the_biginning() && !self.is_the_end(tokens) {
-            let token = self.next(tokens);
+        while !self.is_the_end(tokens) {
+            let token = self.take(tokens);
+            // there are two way to start a document in yaml
+            // on with the start docs symbol, that is represented with `----`
+            // or with a plain identifier.
             match token {
                 YamlToken::StartDoc => match token {
                     YamlToken::Identifier(name) => {
-                        let mapping = self.parse_mapping(name.clone(), tokens);
+                        self.consume(tokens);
+                        let mapping = self.parse_mapping(&name, tokens);
                         self.add_to_ir(mapping);
                     }
                     _ => panic!("Document bad formatted, {:?}", self.take(tokens)),
                 },
                 YamlToken::Identifier(name) => {
-                    let mapping = self.parse_mapping(name.clone(), tokens);
+                    self.consume(tokens);
+                    let mapping = self.parse_mapping(&name, tokens);
                     self.add_to_ir(mapping);
                 }
-                _ => panic!("Document bad formatted, {:?}", self.take(tokens)),
+                YamlToken::Pount(_) => self.parse_comment(tokens),
+                YamlToken::EOF => self.consume(tokens),
+                _ => panic!(
+                    "Document bad formatted, {:?}\n\n Parse {:?} \n\nTokens {:?}",
+                    self.take(tokens),
+                    self,
+                    tokens
+                ),
             }
         }
 
@@ -63,6 +81,78 @@ impl Parser {
         tokens[self.current_pos as usize] == YamlToken::EndDoc
     }
 
+    fn count_spaces(&mut self, tokens: &Vec<YamlToken>) -> Result<u8, YamlParserError> {
+        let token = self.take(tokens);
+        if token != YamlToken::Space {
+            println!("{:?}", token);
+            return Ok(0);
+        }
+        let mut scope_size: u8 = 0;
+        while self.next(tokens) == YamlToken::Space {
+            scope_size = scope_size + 1;
+        }
+        Ok(scope_size)
+    }
+
+    /// Start a new scope from the token that can open a scope
+    /// N.B We check the indentation size from the first number of space
+    /// that we found in the stream, so in this way we make sure that the
+    /// document is well format.
+    fn open_scope(&mut self, tokens: &Vec<YamlToken>) -> Result<YamlToken, YamlParserError> {
+        let scope_size = self.count_spaces(tokens).unwrap_or(0) as u32;
+        match self.current_scope_size {
+            Some(scope_dim) => {
+                if scope_size != scope_dim {
+                    return Err(self.return_error(&format!(
+                        "scope calculated: {} != from scope size {}",
+                        scope_size, scope_dim
+                    )));
+                }
+                self.current_scope_size = Some(scope_dim + scope_size);
+                Ok((self.take(tokens)))
+            }
+            None => {
+                // init indentation size
+                self.indentation_size = scope_size as u16;
+                self.current_scope_size = Some(scope_size);
+                Ok((self.take(tokens)))
+            }
+        }
+    }
+
+    fn close_scope(&mut self, tokens: &Vec<YamlToken>) {}
+
+    fn consume_scope(&mut self, tokens: &Vec<YamlToken>) {
+        match self.current_scope_size {
+            Some(size) => {
+                for _ in 0..size {
+                    assert_eq!(YamlToken::Space, self.next(tokens));
+                }
+            }
+            None => {}
+        }
+    }
+
+    fn current_scope(&mut self, tokens: &Vec<YamlToken>) -> bool {
+        match self.current_scope_size {
+            Some(spaces) => {
+                if let Ok(current_size) = self.count_spaces(tokens) {
+                    current_size as u32 == spaces
+                } else {
+                    false
+                }
+            }
+            None => true,
+        }
+    }
+
+    /// wrapping the way of the compiler to build the error
+    fn return_error(&self, cause: &str) -> YamlParserError {
+        YamlParserError {
+            cause: cause.to_string(),
+        }
+    }
+
     /// Parse the document comment and store in a new comment node
     fn parse_comment(&mut self, tokens: &Vec<YamlToken>) {
         match self.take(tokens) {
@@ -75,8 +165,63 @@ impl Parser {
         }
     }
 
-    fn parse_mapping<'a>(&'a self, identifier: String, tokens: &'a Vec<YamlToken>) -> YamlObject {
-        YamlObject::Comment(String::from("TODO: implementing this"))
+    /// parse Yaml mapping key: value or other type of mapping like:
+    /// ----- Scalar to Sequence ----
+    /// american:
+    // - Boston Red Sox
+    // - Detroit Tigers
+    // - New York Yankees
+    /// --------- Sequence of mapping ---------
+    /// -
+    ///   name: Mark McGwire
+    ///   hr:   65
+    ///   avg:  0.278
+    /// --------- Sequence of Sequence ---------
+    /// - [name        , hr, avg  ]
+    /// --------- Mapping of Mappings ------
+    /// Mark McGwire: {hr: 65, avg: 0.278}
+    fn parse_mapping(&mut self, tag: &str, tokens: &Vec<YamlToken>) -> YamlObject {
+        // TODO start new scope
+        // TODO: read till we are not at the end of the scope
+        let token = self.open_scope(tokens).unwrap();
+        let item = match token {
+            YamlToken::Dash => self.parse_scalar_to_sequence(tokens),
+            YamlToken::LeftSquareBrace => self.parse_sequence_of_sequence(tokens),
+            YamlToken::LeftCurlyBrace => self.parse_mapping_of_mapping(tokens),
+            YamlToken::Identifier(ref sub_tag) => {
+                self.consume(tokens);
+                assert_eq!(self.next(tokens), YamlToken::DotDot);
+                println!("is an idenidier");
+                let sub_doc = self.parse_mapping(sub_tag.as_str(), tokens);
+                YamlObject::Mapping(sub_tag.to_string(), Box::new(sub_doc), false)
+            }
+            _ => panic!(
+                "Invalid mapping format, encounter token {:?} and parse state: {:?}",
+                token, self
+            ),
+        };
+        self.close_scope(tokens);
+        YamlObject::Mapping(tag.to_string(), Box::new(item), true)
+    }
+
+    /// parse Yaml mapping key: value or other type of mapping like:
+    /// ----- Scalar to Sequence ----
+    /// american:
+    /// - Boston Red Sox
+    /// - Detroit Tigers
+    /// - New York Yankees
+    ///
+    /// In this case there are situation where we need to parse the indentation
+    fn parse_scalar_to_sequence(&mut self, tokens: &Vec<YamlToken>) -> YamlObject {
+        YamlObject::Fake
+    }
+
+    fn parse_sequence_of_sequence(&mut self, tokens: &Vec<YamlToken>) -> YamlObject {
+        YamlObject::Fake
+    }
+
+    fn parse_mapping_of_mapping(&mut self, tokens: &Vec<YamlToken>) -> YamlObject {
+        YamlObject::Fake
     }
 
     /// Add the yaml node to the list of Yaml node
@@ -140,7 +285,7 @@ mod test {
     use indoc::indoc;
 
     #[test]
-    fn scan_simple_one() {
+    fn parse_simple_one() {
         let mut scanner = Scanner::new();
         let mut parser = Parser::new();
         let simple_yaml = indoc! {"# This is a list of document
@@ -162,7 +307,7 @@ national:
     }
 
     #[test]
-    fn scan_simple_two() {
+    fn parse_simple_two() {
         let mut scanner = Scanner::new();
         let mut parser = Parser::new();
         let simple_yaml = indoc! {"# This is a list of document
