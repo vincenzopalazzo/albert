@@ -4,7 +4,7 @@
   <img src="./docs/icons/icon-512.png" width="300" height="300" />
 
   <p>
-    <strong> Rust Transpiler that converts a Data Mode like JSON/YAML to source code like Go, C++, but also graphql or protocol buffer </strong>
+    <strong> Rust Transpiler that converts a Data Mode like JSON/YAML to source code like Go, C++, but also Graphql </strong>
   </p>
 
   <p>
