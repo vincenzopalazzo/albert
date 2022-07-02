@@ -1,10 +1,10 @@
 <div align="center">
   <h1> monkeyc </h1>
 
-  <img src="./docs/icons/icon-512.png" width="200" height="200" />
+  <img src="./docs/icons/icon-512.png" width="300" height="300" />
 
   <p>
-    <strong> This is a rust transpiler that converts a JSON scheme to a source code like Go, C++, but also graphql or protocol buffer. </strong>
+    <strong> Rust Transpiler that converts a Data Mode like JSON/YAML to source code like Go, C++, but also graphql or protocol buffer </strong>
   </p>
 
   <p>
