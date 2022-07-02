@@ -21,4 +21,4 @@ build:
 	$(CC) build --release
 
 check:
-	$(CC) test --all -- --show-output
+	$(CC) test --all -- --show-output --nocapture

@@ -31,9 +31,11 @@ impl Scanner {
             '\n' => self.line += 1,
             ' ' => self.add_token(YamlToken::Space),
             ':' => self.add_token(YamlToken::DotDot),
-            '|' | '>' => self.add_token(YamlToken::Multiline(
-                "TODO: I need to add the multiline document".to_string(),
-            )),
+            '|' | '>' => {
+                let multiline = "TODO: need to parse multiline content";
+                self.add_token(YamlToken::Multiline(multiline.to_string()));
+                todo!("{}", multiline);
+            }
             '[' => self.add_token(YamlToken::LeftSquareBrace),
             ']' => self.add_token(YamlToken::RightCurlyBrace),
             '{' => self.add_token(YamlToken::LeftCurlyBrace),
