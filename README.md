@@ -12,6 +12,8 @@
   </p>
 </div>
 
+> A computer program can write a computer program.                                    
+
 ## Table of Content
 
 > This software is under development, please contribute with idea and/or development time.
@@ -20,4 +22,3 @@
 - How to use
 - Why to Use
 - License
-
