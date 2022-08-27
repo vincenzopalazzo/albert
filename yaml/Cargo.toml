@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0"
 monkey-common = { path = "../common" }
+utils = {path = "../utils" }
 
 [dev-dependencies]
 indoc = "1.0"
+env_logger = "0.9.0"
