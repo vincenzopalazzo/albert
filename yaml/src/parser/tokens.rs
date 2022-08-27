@@ -1,8 +1,8 @@
-/// Token implementation for parser
-/// in particular this class represent Object
-/// definition that we can find in a YAML definition
-///
-/// author: https://github.com/vincenzopalazzo
+//! Token implementation for parser
+//! in particular this class represent Object
+//! definition that we can find in a YAML definition
+//!
+//! author: https://github.com/vincenzopalazzo
 
 /// Enum for YAML document definition
 #[derive(Debug)]
@@ -22,6 +22,8 @@ pub enum YamlObject {
     Str(String),
     Int(i64),
     Float(f64),
+    // FIXME: the null value is supported by the yaml spec?
+    Null,
     /// Yaml Comment that store the content of the comment.
     Comment(String),
     Fake,

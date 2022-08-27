@@ -5,7 +5,7 @@ BASE_DIR=/script
 OS=linux
 ARCH=386
 
-OPTIONS=
+OPTS=
 
 default: fmt
 	$(CC) build
@@ -21,4 +21,4 @@ build:
 	$(CC) build --release
 
 check:
-	$(CC) test --all -- --show-output --nocapture
+	$(CC) test --all -- --show-output --nocapture $(OPTS)
