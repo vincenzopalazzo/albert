@@ -105,16 +105,33 @@ impl Parser {
         // TODO: check the case where the literal is not a list but is a value
         if self.open_scope_if_needed(tokens) {
             self.consume_scope(tokens);
-        } else {
-            // in case of literal we need to consume the space, because
-            // there is no scope
-            self.consume_space_if_exit(tokens);
+            self.tracer.info(&format!(
+                "In identifier: open scope, last token: {:?}",
+                self.take(tokens)
+            ));
+            return self.parse_mapping(&ref_id, tokens);
         }
-        self.tracer.info(&format!(
-            "In identifier: open scope, last token: {:?}",
-            self.take(tokens)
-        ));
-        self.parse_mapping(&ref_id, tokens)
+
+        // FIXME: this can be also a script
+        // in case of literal we need to consume the space, because
+        // there is no scope
+        self.consume_space_if_exit(tokens);
+        match self.take(tokens) {
+            // Literal values
+            YamlToken::IntVal(_)
+            | YamlToken::StringVal(_)
+            | YamlToken::FloatVal(_)
+            | YamlToken::BoolVal(_) => {
+                let yaml_val = self.parse_literal_val(tokens);
+                YamlObject::Mapping(ref_id.to_string(), Box::new(yaml_val), false)
+            }
+            _ => panic!(
+                "Invalid mapping format, encounter token {:?} and parse state: {:?}\n{:?}",
+                self.take(tokens),
+                self,
+                tokens
+            ),
+        }
     }
 
     fn open_scope_if_needed(&mut self, tokens: &Vec<YamlToken>) -> bool {
@@ -279,7 +296,10 @@ impl Parser {
                 YamlObject::Mapping(sub_tag.to_string(), Box::new(yaml_identifier), false)
             }
             // Literal values
-            YamlToken::IntVal(_) | YamlToken::StringVal(_) | YamlToken::FloatVal(_) => {
+            YamlToken::IntVal(_)
+            | YamlToken::StringVal(_)
+            | YamlToken::FloatVal(_)
+            | YamlToken::BoolVal(_) => {
                 let yaml_val = self.parse_literal_val(tokens);
                 YamlObject::Mapping(tag.to_string(), Box::new(yaml_val), false)
             }
@@ -296,6 +316,7 @@ impl Parser {
             YamlToken::IntVal(val) => YamlObject::Int(val),
             YamlToken::FloatVal(val) => YamlObject::Float(val),
             YamlToken::StringVal(val) => YamlObject::Str(val),
+            YamlToken::BoolVal(val) => YamlObject::Bool(val),
             YamlToken::NullVal => YamlObject::Null,
             _ => panic!("Not a literal value {:?}. \n{:?}", self.take(tokens), self),
         };
@@ -312,13 +333,15 @@ impl Parser {
     ///
     /// In this case there are situation where we need to parse the indentation
     fn parse_scalar_to_sequence(&mut self, tokens: &Vec<YamlToken>) -> YamlObject {
-        assert_eq!(self.take(tokens), YamlToken::Dash);
-        self.tracer.info(&format!(
-            "parse scalar to sequence: Start with token {:?}",
-            self.take(tokens)
-        ));
-        let mut yaml_seq = Vec::<YamlObject>::new();
+        self.tracer
+            .info(&"******* Read the Yaml sequence *******".to_string());
+        let mut yaml_seq = vec![];
         while self.take(tokens) == YamlToken::Dash {
+            assert_eq!(self.take(tokens), YamlToken::Dash);
+            self.tracer.info(&format!(
+                "parse scalar to sequence: Start with token {:?}",
+                self.take(tokens)
+            ));
             self.consume(tokens); //consume dash
                                   // TODO: this need to be a must, we need to change it
             self.consume_space_if_exit(tokens);
@@ -335,7 +358,14 @@ impl Parser {
                 YamlToken::Identifier(name) => {
                     self.consume(tokens);
                     let yaml_identifier = self.parse_identifier(name.as_str(), tokens);
+                    self.tracer.info(&format!(
+                        "Identifier found {:?}, position at token {:?}",
+                        yaml_identifier,
+                        self.take(tokens)
+                    ));
                     yaml_seq.push(yaml_identifier);
+                    // if we are in the same scope parser it
+                    self.consume_or_close_scope(tokens);
                 }
                 _ => panic!("Unsupported: {:?}", self.take(tokens)),
             }
@@ -428,8 +458,6 @@ national:
  - \"Atlanta Braves\"
 "};
         let tokens = scanner.scan(&simple_yaml);
-        println!("{:?}", tokens);
-
         let ir = parser.parse(&tokens);
         assert!(ir.len() > 0);
     }

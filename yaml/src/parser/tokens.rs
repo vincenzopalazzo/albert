@@ -22,6 +22,7 @@ pub enum YamlObject {
     Str(String),
     Int(i64),
     Float(f64),
+    Bool(bool),
     // FIXME: the null value is supported by the yaml spec?
     Null,
     /// Yaml Comment that store the content of the comment.
