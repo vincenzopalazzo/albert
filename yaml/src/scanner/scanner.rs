@@ -169,9 +169,17 @@ impl Scanner {
                 start_char = self.next(stream);
             }
             // restore the token that the while has consumed
-            self.pos -= 1;
+            self.pos = if self.is_at_end(stream) {
+                self.pos
+            } else {
+                self.pos - 1
+            };
             let identifier = &stream[start..self.pos];
-            self.add_token(YamlToken::Identifier(identifier.to_string()));
+            match identifier {
+                "true" => self.add_token(YamlToken::BoolVal(true)),
+                "false" => self.add_token(YamlToken::BoolVal(false)),
+                _ => self.add_token(YamlToken::Identifier(identifier.to_string())),
+            }
             return true;
         }
         false
@@ -238,7 +246,7 @@ impl YamlScanner<YamlToken> for Scanner {
 
 #[cfg(test)]
 mod test {
-    use crate::scanner::scanner::{Scanner, YamlScanner};
+    use crate::scanner::scanner::{Scanner, YamlScanner, YamlToken};
     use indoc::indoc;
 
     #[test]
@@ -281,6 +289,7 @@ ModelOne:
       - reference: true"};
 
         let tokens = scanner.scan(&simple_yaml);
-        println!("{:?}", tokens)
+        print!("{:?}", tokens.last().unwrap());
+        assert_eq!(tokens[tokens.len() - 2], YamlToken::BoolVal(true));
     }
 }

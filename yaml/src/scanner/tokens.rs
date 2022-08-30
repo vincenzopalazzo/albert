@@ -10,6 +10,7 @@ pub enum YamlToken {
     IntVal(i64),
     FloatVal(f64),
     StringVal(String),
+    BoolVal(bool),
     /// ---, Star document token
     StartDoc,
     /// ..., End document token
