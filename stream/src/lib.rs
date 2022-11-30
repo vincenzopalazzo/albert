@@ -74,7 +74,7 @@ where
     }
 }
 
-trait Stream<T> {
+pub trait Stream<T> {
     fn new(tokens: &Vec<T>) -> Self;
 
     fn new_with_pos(stream: &Vec<T>, pos: usize) -> Self;
