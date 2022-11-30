@@ -1,0 +1,12 @@
+[package]
+name = "albert_stream"
+version = "0.0.1"
+edition = "2021"
+authors = ["Vincenzo Palazzo <vincenzopalazzodev@gmail.com>"]
+description = "minimal procedural macros parser that produce a convenient AST"
+readme = "README.md"
+homepage = "https://github.com/vincenzopalazzo/albert"
+repository = "https://github.com/vincenzopalazzo/albert.git"
+license = "GPL-2.0"
+
+[dependencies]
