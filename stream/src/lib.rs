@@ -44,9 +44,11 @@ where
         self.prev()
     }
 
-    fn lookup<'c>(&'c self, step: usize) -> &'c T {
-        assert!(self.size > self.pos + step);
-        &self.stream[self.pos + step]
+    fn lookup<'c>(&'c self, step: usize) -> Option<&'c T> {
+        if self.size > self.pos + step {
+            return None;
+        }
+        Some(&self.stream[self.pos + step])
     }
 
     fn next(&mut self) {
@@ -83,7 +85,7 @@ pub trait Stream<T> {
     /// in position - 1
     fn advance<'c>(&'c mut self) -> &'c T;
 
-    fn lookup<'c>(&'c self, step: usize) -> &'c T;
+    fn lookup<'c>(&'c self, step: usize) -> Option<&'c T>;
 
     fn next(&mut self);
 
