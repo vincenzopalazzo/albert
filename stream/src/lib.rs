@@ -72,6 +72,9 @@ where
 
     /// check if it is reach the end of the stream
     fn is_end(&self) -> bool {
+        if self.size == 0 {
+            return true;
+        }
         self.pos > self.size - 1
     }
 }
